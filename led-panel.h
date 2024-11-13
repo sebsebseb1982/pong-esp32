@@ -19,6 +19,7 @@ class LEDPanel {
     bool isStandby();
     void wakeUp();
     void zob(long zoby);
+    void zob2(long zoby);
 };
 
 #endif

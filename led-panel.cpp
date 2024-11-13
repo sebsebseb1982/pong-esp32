@@ -1,6 +1,8 @@
 #include "led-panel.h"
 #include "colors.h"
 
+#define RACKET_SIZE 6
+
 LEDPanel::LEDPanel(int toto) {
   // Module configuration
   HUB75_I2S_CFG mxconfig(
@@ -28,13 +30,7 @@ void LEDPanel::setup() {
 }
 
 void LEDPanel::loop() {
-  
-  dma_display->drawRect(
-    0,
-    0,
-    10,
-    10,
-    Colors::white(dma_display));
+    
 }
 
 bool LEDPanel::isStandby() {
@@ -42,18 +38,34 @@ bool LEDPanel::isStandby() {
 }
 
 void LEDPanel::zob(long zoby) {
-  dma_display->clearScreen();
-  //dma_display->fillScreen(Colors::black(dma_display));
-  dma_display->drawRect(
-    20,
-    20,
-    10,
-    10,
+  dma_display->drawLine(
+    0,
+    0,
+    SCREEN_WIDTH,
+    0,
     Colors::black(dma_display));
-  dma_display->setCursor(20, 20);
-  dma_display->setTextColor(Colors::white(dma_display));
-  //dma_display->print(String(zoby, 1));
-  dma_display->print(zoby);
+
+  dma_display->drawLine(
+    zoby,
+    0,
+    zoby + RACKET_SIZE,
+    0,
+    Colors::white(dma_display));
+}
+void LEDPanel::zob2(long zoby) {
+dma_display->drawLine(
+    0,
+    SCREEN_HEIGHT - 1,
+    SCREEN_WIDTH,
+    SCREEN_HEIGHT - 1,
+    Colors::black(dma_display));
+
+  dma_display->drawLine(
+    zoby,
+    SCREEN_HEIGHT - 1,
+    zoby + RACKET_SIZE,
+    SCREEN_HEIGHT - 1,
+    Colors::white(dma_display));
 }
 
 void LEDPanel::wakeUp() {
