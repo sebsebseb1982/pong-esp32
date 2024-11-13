@@ -19,6 +19,7 @@ class Ball {
     float positionY;
     float lastPositionX;
     float lastPositionY;
+    bool hasTouchedWall;
     Ball(void);
     void loop();
 };

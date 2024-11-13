@@ -23,10 +23,12 @@ Ball::Ball(void) {
   this->speedX = 16.3;
   this->speedY = 22.2;
   this->lastLoopMillis = millis();
+  this->hasTouchedWall = false;
 }
 
 void Ball::loop() {
   unsigned long nowMillis = millis();
+  this->hasTouchedWall = false;
   this->lastPositionX = this->positionX;
   this->lastPositionY = this->positionY;
 
@@ -47,22 +49,22 @@ void Ball::loop() {
   this->positionY = this->positionY + this->speedY * deltaLoopInSeconds;
 
   if (this->positionX <= 0.0) {
-    //Buzzer::playTone(300, 10);
+    this->hasTouchedWall = true;
     this->speedX = this->speedX * -1.0;
     this->positionX = this->positionX * -1.0;
   } else if (this->positionX >= GAME_WIDTH - 1) {
-    //Buzzer::playTone(300, 10);
+    this->hasTouchedWall = true;
     this->speedX = this->speedX * -1.0;
     this->positionX = ((GAME_WIDTH * 1.0) - 1.0) - (this->positionX - (GAME_WIDTH * 1.0));
   }
 
 
   if (this->positionY <= 0.0) {
-    //Buzzer::playTone(300, 10);
+    this->hasTouchedWall = true;
     this->speedY = this->speedY * -1.0;
     this->positionY = this->positionY * -1.0;
   } else if (this->positionY >= GAME_HEIGHT - 1) {
-    //Buzzer::playTone(300, 10);
+    this->hasTouchedWall = true;
     this->speedY = this->speedY * -1.0;
     this->positionY = ((GAME_HEIGHT * 1.0) - 1.0) - (this->positionY - (GAME_HEIGHT * 1.0));
   }

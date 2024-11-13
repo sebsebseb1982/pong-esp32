@@ -6,6 +6,7 @@
 #include "buzzer.h"
 #include "game.h"
 #include "user-interface.h"
+#include "sound.h"
 
 #define ROTARY_ENCODER_A_PIN_P1 34
 #define ROTARY_ENCODER_B_PIN_P1 33
@@ -28,6 +29,7 @@
 LEDPanel ledPanel(8);
 Game game;
 UserInterface ui(&game, &ledPanel);
+Sound sound(&game);
 
 AiEsp32RotaryEncoder rotaryEncoderP1 = AiEsp32RotaryEncoder(
   ROTARY_ENCODER_A_PIN_P1,
@@ -110,6 +112,7 @@ void setup() {
   game.setup();
   game.newGame();
   ui.setup();
+  sound.setup();
   
   //we must initialize rotary encoder
   rotaryEncoderP1.begin();
@@ -149,7 +152,6 @@ void setup() {
 
 void loop() {
   //Serial.println("loop()");
-  Buzzer::loop();
 
   WiFiConnection::loop();
   //OTA::loop();
@@ -158,6 +160,8 @@ void loop() {
   rotary_loop_p2();
   game.loop();
   ui.loop();
+  sound.loop();
+  Buzzer::loop();
 
   int buttonState2 = digitalRead(2);
   //Serial.println(buttonState2);
