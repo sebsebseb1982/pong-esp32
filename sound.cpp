@@ -10,6 +10,6 @@ void Sound::setup() {
 
 void Sound::loop() {
   if(this->game->ball.hasTouchedWall) {
-    Buzzer::playTone(1000, 10);
+    Buzzer::playTone(1000, 8);
   }
 }

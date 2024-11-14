@@ -7,7 +7,7 @@
 
 #define buzzerPin 21
 
-unsigned long Buzzer::stopBeepMillis = 0;
+unsigned long Buzzer::stopBeepMillis = 0UL;
 unsigned int Buzzer::currentLevel = 0;
 
 void Buzzer::setup() {
@@ -18,41 +18,33 @@ void Buzzer::setup() {
 }
 
 void Buzzer::on() {
-  Serial.println("on()");
   ledcWriteChannel(
     pwmChannel,
     127);
-  Buzzer::stopBeepMillis = 0;
 }
 
 void Buzzer::off() {
   ledcWriteChannel(
     pwmChannel,
     0);
+  Buzzer::stopBeepMillis = 0UL;
 }
 
 void Buzzer::loop() {
-  if (Buzzer::stopBeepMillis != 0 && millis() > stopBeepMillis) {
+  if (Buzzer::stopBeepMillis != 0UL && millis() > stopBeepMillis) {
     off();
   }
 }
 
 void Buzzer::setFrequency(int frequency) {
-  Serial.print("setFrequency(");
-  Serial.print(frequency);
-  Serial.print(")");
   ledcChangeFrequency(
     buzzerPin,
     frequency,
     resolution);
 }
 
-
 void Buzzer::playTone(int frequency, int durationInMs) {
-  ledcAttach(
-    buzzerPin,
-    frequency,
-    resolution);
+  setFrequency(frequency);
   Buzzer::stopBeepMillis = millis() + durationInMs;
   on();
 }

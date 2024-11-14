@@ -84,11 +84,8 @@ void rotary_loop_p2() {
     Buzzer::setFrequency(rotaryEncoderP2.readEncoder()*100);
   }
   if (rotaryEncoderP2.isEncoderButtonClicked()) {
-    //rotary_onButtonClick();
-    Buzzer::on();
-  } else {
-    Buzzer::off();
-  }
+    rotary_onButtonClick();
+  } 
 }
 
 void IRAM_ATTR readEncoderISR_p1() {
