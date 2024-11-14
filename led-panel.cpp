@@ -3,7 +3,7 @@
 
 #define RACKET_SIZE 6
 
-LEDPanel::LEDPanel(int toto) {
+LEDPanel::LEDPanel(void) {
   // Module configuration
   HUB75_I2S_CFG mxconfig(
     SCREEN_WIDTH,   // module width

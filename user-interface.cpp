@@ -7,6 +7,7 @@ UserInterface::UserInterface(Game *game, LEDPanel *ledPanel) {
   this->ledPanel = ledPanel;
 }
 void UserInterface::setup() {
+  //    this->ledPanel->dma_display->fillScreen(Colors::white(this->ledPanel->dma_display));
 }
 void UserInterface::loop() {
   drawBall();

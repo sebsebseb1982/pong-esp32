@@ -13,7 +13,7 @@ class LEDPanel {
     unsigned long nextStandbyInMs;
   public:
     MatrixPanel_I2S_DMA* dma_display;
-    LEDPanel(int toto);
+    LEDPanel(void);
     void setup();
     void loop();
     bool isStandby();
