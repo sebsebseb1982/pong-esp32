@@ -23,7 +23,6 @@ void setup() {
   OTA::setup();
   ledPanel.setup();
   game.setup();
-  game.newGame();
   ui.setup();
   sound.setup();
   controls.setup();
@@ -36,6 +35,6 @@ void loop() {
   ledPanel.loop();
   game.loop();
   ui.loop();
-  sound.loop();
+  //sound.loop();
   Buzzer::loop();
 }

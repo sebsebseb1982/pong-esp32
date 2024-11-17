@@ -9,6 +9,10 @@ class UserInterface {
     Game *game;
     LEDPanel *ledPanel;
     void drawBall();
+    void drawRacket(Racket *racket);
+    void drawScores();
+    void drawAScore(Player *player, int positionY);
+    void drawInterface();
   public:
     UserInterface(Game *game, LEDPanel *ledPanel);
     void setup();
