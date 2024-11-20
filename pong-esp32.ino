@@ -35,6 +35,6 @@ void loop() {
   ledPanel.loop();
   game.loop();
   ui.loop();
-  //sound.loop();
+  sound.loop();
   Buzzer::loop();
 }

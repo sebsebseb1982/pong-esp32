@@ -54,7 +54,10 @@ void Controls::setupRotaryEncoder(AiEsp32RotaryEncoder* rotaryEncoder, void (*IS
   rotaryEncoder->begin();
   rotaryEncoder->setup(ISR_callback);
   bool circleValues = false;
-  rotaryEncoder->setBoundaries(0, 57, circleValues);
+  rotaryEncoder->setBoundaries(
+    0,
+    GAME_WIDTH - INITIAL_RACKET_SIZE - 1,
+    circleValues);
   rotaryEncoder->setAcceleration(25);
 }
 
