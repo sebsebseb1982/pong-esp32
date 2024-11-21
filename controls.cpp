@@ -63,7 +63,7 @@ void Controls::setupRotaryEncoder(AiEsp32RotaryEncoder* rotaryEncoder, void (*IS
 
 void Controls::loop() {
   // Player 1
-  this->game->player1->racket->lastPositionX = this->game->player1->racket->positionX;
+  this->game->player1->racket->previousPositionX = this->game->player1->racket->positionX;
   if (this->player1RotaryEncoder->encoderChanged()) {
     this->game->player1->racket->positionX = this->player1RotaryEncoder->readEncoder();
   }
@@ -72,11 +72,13 @@ void Controls::loop() {
   }
 
   if (digitalRead(PLAYER_1_BUTTON_PIN) == HIGH) {
-    Serial.println("P1 button clicked !");
+    this->game->player1->racket->size = INITIAL_RACKET_SIZE / 2;
+  } else {
+    this->game->player1->racket->size = INITIAL_RACKET_SIZE;
   }
 
   // Player 2
-  this->game->player2->racket->lastPositionX = this->game->player2->racket->positionX;
+  this->game->player2->racket->previousPositionX = this->game->player2->racket->positionX;
   if (this->player2RotaryEncoder->encoderChanged()) {
     this->game->player2->racket->positionX = this->player2RotaryEncoder->readEncoder();
   }
@@ -85,6 +87,8 @@ void Controls::loop() {
   }
 
   if (digitalRead(PLAYER_2_BUTTON_PIN) == HIGH) {
-    Serial.println("P2 button clicked !");
+    this->game->player2->racket->size = INITIAL_RACKET_SIZE / 2;
+  } else {
+    this->game->player2->racket->size = INITIAL_RACKET_SIZE;
   }
 }

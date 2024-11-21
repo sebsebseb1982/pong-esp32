@@ -4,18 +4,24 @@
 #define GAME_WIDTH 58
 #define GAME_HEIGHT 64
 
-#define INITIAL_RACKET_SIZE 6
+#define INITIAL_RACKET_SIZE 13
 #define MAXIMUM_POINTS 21 // Mutiple de 3
+#define RACKET_SPEED_REFRESH_RATE 200
+#define MINIMUM_SPEED 16
 
 enum TypeLimit {MIN, MAX};
 
 class Racket {
 public:
   Racket(int initialPositionY);
+  void loop();
   int positionX;
   int positionY;
-  int lastPositionX;
-  int lastPositionY;
+  int previousPositionX;
+  int previousPositionY;
+  int previousSpeedRefreshPositionX;
+  unsigned long nextSpeedRefresh;
+  float speedX;  // pixels / s
   int size;
 };
 
@@ -28,22 +34,22 @@ public:
 
 class Ball {
 private:
-  unsigned long lastLoopMillis;
+  unsigned long previousLoopMillis;
   void loopCollisionWalls();
 public:
+  void loop();
   float speedX;  // pixels / s
   float speedY;  // pixels / s
   float positionX;
   float positionY;
-  float lastPositionX;
-  float lastPositionY;
+  float previousPositionX;
+  float previousPositionY;
   bool hasTouchedWall;
   bool hasTouchedRacket;
   bool isOut;
   void reboundXIfNeeded(float limitX, TypeLimit typeLimit);
   bool reboundYIfNeeded(Racket *racket, TypeLimit typeLimit);
   Ball(void);
-  void loop();
 };
 
 class Game {

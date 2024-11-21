@@ -8,6 +8,7 @@ UserInterface::UserInterface(Game *game, LEDPanel *ledPanel) {
 }
 void UserInterface::setup() {
   drawInterface();
+  loop();
 }
 void UserInterface::loop() {
   drawBall();
@@ -58,13 +59,13 @@ void UserInterface::drawRacket(Racket *racket) {
   uint16_t racketColor = Colors::white(this->ledPanel->dma_display);
   uint16_t backgroundColor = Colors::black(this->ledPanel->dma_display);
 
-  bool hasChangedPosition = racket->lastPositionX != racket->positionX;
+  bool hasChangedPosition = racket->previousPositionX != racket->positionX;
 
   if (hasChangedPosition) {
     this->ledPanel->dma_display->drawLine(
-      racket->lastPositionX,
+      racket->previousPositionX,
       racket->positionY,
-      racket->lastPositionX + racket->size,
+      racket->previousPositionX + racket->size,
       racket->positionY,
       backgroundColor);
     this->ledPanel->dma_display->drawLine(
@@ -80,15 +81,15 @@ void UserInterface::drawBall() {
   uint16_t ballColor = Colors::white(this->ledPanel->dma_display);
   uint16_t backgroundColor = Colors::black(this->ledPanel->dma_display);
 
-  int lastPixelX = round(this->game->ball.lastPositionX);
-  int lastPixelY = round(this->game->ball.lastPositionY);
+  int previousPixelX = round(this->game->ball.previousPositionX);
+  int previousPixelY = round(this->game->ball.previousPositionY);
   int currentPixelX = round(this->game->ball.positionX);
   int currentPixelY = round(this->game->ball.positionY);
 
-  if (lastPixelX != currentPixelX || lastPixelY != currentPixelY) {
+  if (previousPixelX != currentPixelX || previousPixelY != currentPixelY) {
     this->ledPanel->dma_display->drawPixel(
-      lastPixelX,
-      lastPixelY,
+      previousPixelX,
+      previousPixelY,
       backgroundColor);
 
     this->ledPanel->dma_display->drawPixel(
