@@ -12,6 +12,8 @@ class UserInterface {
     int prevBonusPixelX[MAX_FIELD_BONUSES];
     int prevBonusPixelY[MAX_FIELD_BONUSES];
     bool prevBonusActive[MAX_FIELD_BONUSES];
+    uint16_t prevRacket1Color;
+    uint16_t prevRacket2Color;
     void drawBall();
     void drawRacket(Racket *racket);
     void drawFieldBonuses();

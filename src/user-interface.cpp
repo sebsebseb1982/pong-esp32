@@ -6,6 +6,8 @@ UserInterface::UserInterface(Game *game, LEDPanel *ledPanel) {
   this->game = game;
   this->ledPanel = ledPanel;
   this->previousState = GAME_INTRO;
+  this->prevRacket1Color = 0;
+  this->prevRacket2Color = 0;
   for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
     this->prevBonusPixelX[i] = -1;
     this->prevBonusPixelY[i] = -1;
@@ -176,9 +178,13 @@ void UserInterface::drawRacket(Racket *racket) {
   }
   uint16_t backgroundColor = Colors::black(this->ledPanel->dma_display);
 
-  bool needRedraw = racket->previousPositionX != racket->positionX || racket->previousSize != racket->size;
+  uint16_t &prevColor = (racket == this->game->player1->racket) ? this->prevRacket1Color : this->prevRacket2Color;
+  bool needRedraw = racket->previousPositionX != racket->positionX
+                 || racket->previousSize != racket->size
+                 || racketColor != prevColor;
 
   if (needRedraw) {
+    prevColor = racketColor;
     this->ledPanel->dma_display->drawLine(
       racket->previousPositionX,
       racket->positionY,
