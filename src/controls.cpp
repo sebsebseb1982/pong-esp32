@@ -87,18 +87,14 @@ void Controls::loop() {
   }
 
   this->game->player1->racket->previousSize = this->game->player1->racket->size;
-  if (digitalRead(PLAYER_1_BUTTON_PIN) == HIGH) {
-    this->game->player1->racket->size = INITIAL_RACKET_SIZE / 2;
-    setupRotaryEncoder(
-      this->player1RotaryEncoder,
-      this->game->player1->racket,
-      Controls::readPlayer1RotaryEncoderISR);
-  } else {
-    this->game->player1->racket->size = INITIAL_RACKET_SIZE;
-    setupRotaryEncoder(
-      this->player1RotaryEncoder,
-      this->game->player1->racket,
-      Controls::readPlayer1RotaryEncoderISR);
+  this->game->player1->racket->size = (digitalRead(PLAYER_1_BUTTON_PIN) == HIGH)
+    ? INITIAL_RACKET_SIZE / 2
+    : INITIAL_RACKET_SIZE;
+  if (this->game->player1->racket->size != this->game->player1->racket->previousSize) {
+    this->player1RotaryEncoder->setBoundaries(
+      0,
+      GAME_WIDTH - this->game->player1->racket->size - 1,
+      false);
   }
 
   // Player 2
@@ -111,9 +107,13 @@ void Controls::loop() {
   }
 
   this->game->player2->racket->previousSize = this->game->player2->racket->size;
-  if (digitalRead(PLAYER_2_BUTTON_PIN) == HIGH) {
-    this->game->player2->racket->size = INITIAL_RACKET_SIZE / 2;
-  } else {
-    this->game->player2->racket->size = INITIAL_RACKET_SIZE;
+  this->game->player2->racket->size = (digitalRead(PLAYER_2_BUTTON_PIN) == HIGH)
+    ? INITIAL_RACKET_SIZE / 2
+    : INITIAL_RACKET_SIZE;
+  if (this->game->player2->racket->size != this->game->player2->racket->previousSize) {
+    this->player2RotaryEncoder->setBoundaries(
+      0,
+      GAME_WIDTH - this->game->player2->racket->size - 1,
+      false);
   }
 }
