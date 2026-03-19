@@ -8,8 +8,10 @@
 #define MAXIMUM_POINTS 21 // Mutiple de 3
 #define RACKET_SPEED_REFRESH_RATE 200
 #define MINIMUM_SPEED 16
+#define INTRO_DURATION_MS 5000
 
 enum TypeLimit {MIN, MAX};
+enum GameState { GAME_INTRO, GAME_PLAYING, GAME_OVER };
 
 class Racket {
 public:
@@ -39,6 +41,7 @@ private:
   void loopCollisionWalls();
 public:
   void loop();
+  void reset();
   float speedX;  // pixels / s
   float speedY;  // pixels / s
   float positionX;
@@ -61,9 +64,13 @@ public:
   Ball ball;
   Player *player1;
   Player *player2;
+  GameState state;
+  Player *winner;
+  unsigned long introStartMs;
   Game(void);
   void setup();
   void loop();
+  void reset();
 };
 
 #endif

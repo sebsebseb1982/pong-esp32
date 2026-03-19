@@ -8,11 +8,14 @@ class UserInterface {
   private:
     Game *game;
     LEDPanel *ledPanel;
+    GameState previousState;
     void drawBall();
     void drawRacket(Racket *racket);
     void drawScores();
     void drawAScore(Player *player, int positionY);
     void drawInterface();
+    void drawIntro();
+    void drawGameOver();
   public:
     UserInterface(Game *game, LEDPanel *ledPanel);
     void setup();

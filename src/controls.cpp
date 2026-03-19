@@ -64,6 +64,19 @@ void Controls::setupRotaryEncoder(AiEsp32RotaryEncoder* rotaryEncoder, Racket* r
 }
 
 void Controls::loop() {
+  // During game over, any button press restarts the game
+  if (this->game->state == GAME_OVER) {
+    bool restartRequested =
+      this->player1RotaryEncoder->isEncoderButtonClicked() ||
+      this->player2RotaryEncoder->isEncoderButtonClicked() ||
+      digitalRead(PLAYER_1_BUTTON_PIN) == HIGH ||
+      digitalRead(PLAYER_2_BUTTON_PIN) == HIGH;
+    if (restartRequested) {
+      this->game->reset();
+    }
+    return;
+  }
+
   // Player 1
   this->game->player1->racket->previousPositionX = this->game->player1->racket->positionX;
   if (this->player1RotaryEncoder->encoderChanged()) {

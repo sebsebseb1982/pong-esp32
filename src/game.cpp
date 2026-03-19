@@ -5,9 +5,13 @@
 Game::Game(void) {
   this->player1 = new Player(new Racket(0));
   this->player2 = new Player(new Racket(GAME_HEIGHT - 1));
+  this->state = GAME_INTRO;
+  this->winner = nullptr;
+  this->introStartMs = 0;
 }
 
 void Game::setup() {
+  this->introStartMs = millis();
 }
 
 void Game::loopCollisions() {
@@ -21,9 +25,28 @@ void Game::loopCollisions() {
 }
 
 void Game::loopScore() {
+  if (this->player1->score >= MAXIMUM_POINTS) {
+    this->winner = this->player1;
+    this->state = GAME_OVER;
+  } else if (this->player2->score >= MAXIMUM_POINTS) {
+    this->winner = this->player2;
+    this->state = GAME_OVER;
+  }
 }
 
 void Game::loop() {
+  if (this->state == GAME_INTRO) {
+    if (millis() - this->introStartMs >= INTRO_DURATION_MS) {
+      this->state = GAME_PLAYING;
+    }
+    this->player1->racket->loop();
+    this->player2->racket->loop();
+    return;
+  }
+  if (this->state == GAME_OVER) {
+    return;
+  }
+  // GAME_PLAYING
   this->player1->racket->loop();
   this->player2->racket->loop();
   this->ball.loop();
@@ -145,4 +168,30 @@ void Ball::loop() {
   this->positionY = this->positionY + this->speedY * deltaLoopInSeconds;
 
   this->previousLoopMillis = nowMillis;
+}
+
+void Ball::reset() {
+  this->positionX = 1.0;
+  this->positionY = 1.0;
+  this->previousPositionX = -999.0;
+  this->previousPositionY = -999.0;
+  this->speedX = 16.3;
+  this->speedY = 22.2;
+  this->previousLoopMillis = millis();
+  this->hasTouchedWall = false;
+  this->hasTouchedRacket = false;
+  this->isOut = false;
+}
+
+void Game::reset() {
+  this->player1->score = 0;
+  this->player2->score = 0;
+  this->player1->racket->positionX = 0;
+  this->player1->racket->previousPositionX = -1;
+  this->player2->racket->positionX = 0;
+  this->player2->racket->previousPositionX = -1;
+  this->winner = nullptr;
+  this->ball.reset();
+  this->state = GAME_INTRO;
+  this->introStartMs = millis();
 }
