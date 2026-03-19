@@ -6,17 +6,20 @@
 
 class UserInterface {
   private:
+    struct PrevObstacle { int x, y, w, h; bool active; };
     Game *game;
     LEDPanel *ledPanel;
     GameState previousState;
     int prevBonusPixelX[MAX_FIELD_BONUSES];
     int prevBonusPixelY[MAX_FIELD_BONUSES];
     bool prevBonusActive[MAX_FIELD_BONUSES];
+    PrevObstacle prevObstacles[MAX_OBSTACLES];
     uint16_t prevRacket1Color;
     uint16_t prevRacket2Color;
     void drawBall();
     void drawRacket(Racket *racket);
     void drawFieldBonuses();
+    void drawObstacles();
     void drawBonusInventory();
     void drawScores();
     void drawAScore(Player *player, int positionY);

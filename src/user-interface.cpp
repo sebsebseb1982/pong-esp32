@@ -13,6 +13,9 @@ UserInterface::UserInterface(Game *game, LEDPanel *ledPanel) {
     this->prevBonusPixelY[i] = -1;
     this->prevBonusActive[i] = false;
   }
+  for (int i = 0; i < MAX_OBSTACLES; i++) {
+    this->prevObstacles[i].active = false;
+  }
 }
 
 void UserInterface::setup() {
@@ -42,6 +45,9 @@ void UserInterface::loop() {
           this->prevBonusPixelY[i] = -1;
           this->prevBonusActive[i] = false;
         }
+        for (int i = 0; i < MAX_OBSTACLES; i++) {
+          this->prevObstacles[i].active = false;
+        }
         break;
       case GAME_PLAYING:
         // GAME_STARTING already set up the play area; nothing to (re)do here
@@ -65,6 +71,7 @@ void UserInterface::loop() {
     case GAME_STARTING:
     case GAME_PLAYING:
       drawFieldBonuses();
+      drawObstacles();
       drawBall();
       drawRacket(this->game->player1->racket);
       drawRacket(this->game->player2->racket);
@@ -220,9 +227,14 @@ void UserInterface::drawFieldBonuses() {
     }
     // Draw new pixel
     if (b.active) {
-      uint16_t bonusColor = (b.type == BONUS_SHRINK_ENEMY)
-        ? Colors::red(this->ledPanel->dma_display)
-        : Colors::green(this->ledPanel->dma_display);
+      uint16_t bonusColor;
+      if (b.type == BONUS_SHRINK_ENEMY) {
+        bonusColor = Colors::red(this->ledPanel->dma_display);
+      } else if (b.type == BONUS_ENLARGE_SELF) {
+        bonusColor = Colors::green(this->ledPanel->dma_display);
+      } else {
+        bonusColor = Colors::white(this->ledPanel->dma_display);
+      }
       this->ledPanel->dma_display->drawPixel(curX, curY, bonusColor);
     }
     this->prevBonusActive[i] = b.active;
@@ -232,25 +244,56 @@ void UserInterface::drawFieldBonuses() {
 }
 
 void UserInterface::drawBonusInventory() {
-  // P1 inventory bar at x=59, y=1..7 (fills downward from top)
+  // P1 inventory bar at x=59, y=9..15 (between scores, fills downward)
   for (int i = 0; i < MAX_INVENTORY; i++) {
     uint16_t color = Colors::black(this->ledPanel->dma_display);
     if (i < this->game->player1->inventoryCount) {
       color = (this->game->player1->inventory[i] == BONUS_SHRINK_ENEMY)
         ? Colors::red(this->ledPanel->dma_display)
-        : Colors::green(this->ledPanel->dma_display);
+        : (this->game->player1->inventory[i] == BONUS_ENLARGE_SELF)
+          ? Colors::green(this->ledPanel->dma_display)
+          : Colors::white(this->ledPanel->dma_display);
     }
-    this->ledPanel->dma_display->drawPixel(59, 1 + i, color);
+    this->ledPanel->dma_display->drawPixel(59, 9 + i, color);
   }
-  // P2 inventory bar at x=59, y=56..62 (fills upward from bottom)
+  // P2 inventory bar at x=59, y=49..55 (between scores, fills upward)
   for (int i = 0; i < MAX_INVENTORY; i++) {
     uint16_t color = Colors::black(this->ledPanel->dma_display);
     if (i < this->game->player2->inventoryCount) {
       color = (this->game->player2->inventory[i] == BONUS_SHRINK_ENEMY)
         ? Colors::red(this->ledPanel->dma_display)
-        : Colors::green(this->ledPanel->dma_display);
+        : (this->game->player2->inventory[i] == BONUS_ENLARGE_SELF)
+          ? Colors::green(this->ledPanel->dma_display)
+          : Colors::white(this->ledPanel->dma_display);
     }
-    this->ledPanel->dma_display->drawPixel(59, 62 - i, color);
+    this->ledPanel->dma_display->drawPixel(59, 55 - i, color);
+  }
+}
+
+void UserInterface::drawObstacles() {
+  for (int i = 0; i < MAX_OBSTACLES; i++) {
+    ObstacleItem &obs = this->game->obstacles[i];
+    PrevObstacle &prev = this->prevObstacles[i];
+    bool changed = (obs.active != prev.active) ||
+                   (obs.active && (obs.x != prev.x || obs.y != prev.y ||
+                                   obs.w != prev.w || obs.h != prev.h));
+    if (!changed) continue;
+
+    if (prev.active) {
+      this->ledPanel->dma_display->fillRect(
+        prev.x, prev.y, prev.w, prev.h,
+        Colors::black(this->ledPanel->dma_display));
+    }
+    if (obs.active) {
+      this->ledPanel->dma_display->fillRect(
+        obs.x, obs.y, obs.w, obs.h,
+        Colors::white(this->ledPanel->dma_display));
+    }
+    prev.active = obs.active;
+    prev.x = obs.x;
+    prev.y = obs.y;
+    prev.w = obs.w;
+    prev.h = obs.h;
   }
 }
 

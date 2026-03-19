@@ -14,6 +14,10 @@ Game::Game(void) {
   for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
     this->fieldBonuses[i].active = false;
   }
+  for (int i = 0; i < MAX_OBSTACLES; i++) {
+    this->obstacles[i].active = false;
+    this->obstacles[i].immuneUntil = 0;
+  }
   this->racket1Effect.active = false;
   this->racket2Effect.active = false;
 }
@@ -53,7 +57,7 @@ void Game::loopBonusSpawning() {
   if (freeSlot != -1) {
     this->fieldBonuses[freeSlot].positionX = random(GAME_WIDTH / 4, GAME_WIDTH * 3 / 4 + 1);
     this->fieldBonuses[freeSlot].positionY = random(GAME_HEIGHT / 4, GAME_HEIGHT * 3 / 4 + 1);
-    this->fieldBonuses[freeSlot].type = (random(2) == 0) ? BONUS_SHRINK_ENEMY : BONUS_ENLARGE_SELF;
+    this->fieldBonuses[freeSlot].type = (BonusType)random(3);
     this->fieldBonuses[freeSlot].active = true;
   }
   this->nextBonusSpawnTime = millis() + random(BONUS_SPAWN_MIN_MS, BONUS_SPAWN_MAX_MS + 1);
@@ -96,6 +100,28 @@ void Game::activateBonus(Player *player) {
   BonusType bonusType = player->inventory[player->inventoryCount - 1];
   player->inventoryCount--;
 
+  if (bonusType == BONUS_OBSTACLE) {
+    int freeSlot = -1;
+    for (int j = 0; j < MAX_OBSTACLES; j++) {
+      if (!this->obstacles[j].active) { freeSlot = j; break; }
+    }
+    if (freeSlot == -1) return;
+    int w = random(2, 8);
+    int h = random(2, 8);
+    ObstacleItem &obs = this->obstacles[freeSlot];
+    obs.w = w;
+    obs.h = h;
+    if (player == this->player1) {
+      obs.x = random(0, GAME_WIDTH - w);
+      obs.y = random(GAME_HEIGHT / 2, GAME_HEIGHT - 10 - h);
+    } else {
+      obs.x = random(0, GAME_WIDTH - w);
+      obs.y = random(10, GAME_HEIGHT / 2 - h);
+    }
+    obs.active = true;
+    return;
+  }
+
   RacketEffect *effect;
   Racket *targetRacket;
   int newSize;
@@ -114,6 +140,31 @@ void Game::activateBonus(Player *player) {
   effect->type      = bonusType;
   effect->expiresAt = millis() + BONUS_DURATION_MS;
   effect->active    = true;
+}
+
+void Game::loopObstacleCollisions() {
+  for (int i = 0; i < MAX_OBSTACLES; i++) {
+    if (!this->obstacles[i].active) continue;
+    ObstacleItem &obs = this->obstacles[i];
+    if (millis() < obs.immuneUntil) continue;
+    int ibx = (int)roundf(this->ball.positionX);
+    int iby = (int)roundf(this->ball.positionY);
+    if (ibx >= obs.x && ibx < obs.x + obs.w &&
+        iby >= obs.y && iby < obs.y + obs.h) {
+      int ipbx = (int)roundf(this->ball.previousPositionX);
+      int ipby = (int)roundf(this->ball.previousPositionY);
+      bool prevInX = ipbx >= obs.x && ipbx < obs.x + obs.w;
+      bool prevInY = ipby >= obs.y && ipby < obs.y + obs.h;
+      if (!prevInX) this->ball.speedX = -this->ball.speedX;
+      if (!prevInY) this->ball.speedY = -this->ball.speedY;
+      if (prevInX && prevInY) {
+        this->ball.speedX = -this->ball.speedX;
+        this->ball.speedY = -this->ball.speedY;
+      }
+      this->ball.hasTouchedWall = true;
+      obs.immuneUntil = millis() + 300;
+    }
+  }
 }
 
 void Game::loopScore() {
@@ -157,6 +208,7 @@ void Game::loop() {
   this->loopBonusSpawning();
   this->loopBonusCollection();
   this->loopBonusEffects();
+  this->loopObstacleCollisions();
   this->loopScore();
 }
 
@@ -308,6 +360,10 @@ void Game::reset() {
   this->lastHitter = nullptr;
   for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
     this->fieldBonuses[i].active = false;
+  }
+  for (int i = 0; i < MAX_OBSTACLES; i++) {
+    this->obstacles[i].active = false;
+    this->obstacles[i].immuneUntil = 0;
   }
   this->player1->inventoryCount = 0;
   this->player2->inventoryCount = 0;
