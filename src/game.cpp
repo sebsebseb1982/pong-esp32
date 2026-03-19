@@ -8,6 +8,7 @@ Game::Game(void) {
   this->state = GAME_INTRO;
   this->winner = nullptr;
   this->introStartMs = 0;
+  this->startingStartMs = 0;
   this->lastHitter = nullptr;
   this->nextBonusSpawnTime = 0;
   for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
@@ -34,9 +35,11 @@ void Game::loopCollisions() {
   if (this->ball.hasTouchedRacket) this->lastHitter = this->player1;
   this->player2->score += p1miss ? 1 : 0;
 
+  bool p1hit = this->ball.hasTouchedRacket;
   this->ball.hasTouchedRacket = false;
   bool p2miss = this->ball.reboundYIfNeeded(this->player2->racket, MAX);
   if (this->ball.hasTouchedRacket) this->lastHitter = this->player2;
+  this->ball.hasTouchedRacket = this->ball.hasTouchedRacket || p1hit;
   this->player1->score += p2miss ? 1 : 0;
 }
 
@@ -126,6 +129,17 @@ void Game::loopScore() {
 void Game::loop() {
   if (this->state == GAME_INTRO) {
     if (millis() - this->introStartMs >= INTRO_DURATION_MS) {
+      this->ball.reset();
+      this->state = GAME_STARTING;
+      this->startingStartMs = millis();
+    }
+    this->player1->racket->loop();
+    this->player2->racket->loop();
+    return;
+  }
+  if (this->state == GAME_STARTING) {
+    if (millis() - this->startingStartMs >= GAME_START_DELAY_MS) {
+      this->ball.reset();
       this->state = GAME_PLAYING;
     }
     this->player1->racket->loop();

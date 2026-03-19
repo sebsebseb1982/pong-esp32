@@ -26,11 +26,10 @@ void UserInterface::loop() {
       case GAME_INTRO:
         drawIntro();
         break;
-      case GAME_PLAYING:
-        // Clear game area, rebuild static UI, force racket & ball redraw
+      case GAME_STARTING:
+        // Intro over: clear screen and prepare play area (ball stationary, no P1/P2)
         this->ledPanel->dma_display->fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT,
           Colors::black(this->ledPanel->dma_display));
-        // Clear bonus inventory column
         this->ledPanel->dma_display->drawLine(59, 0, 59, SCREEN_HEIGHT - 1,
           Colors::black(this->ledPanel->dma_display));
         drawInterface();
@@ -41,6 +40,9 @@ void UserInterface::loop() {
           this->prevBonusPixelY[i] = -1;
           this->prevBonusActive[i] = false;
         }
+        break;
+      case GAME_PLAYING:
+        // GAME_STARTING already set up the play area; nothing to (re)do here
         break;
       case GAME_OVER:
         // Clear inventory column before drawing game-over screen
@@ -58,6 +60,7 @@ void UserInterface::loop() {
       drawRacket(this->game->player1->racket);
       drawRacket(this->game->player2->racket);
       break;
+    case GAME_STARTING:
     case GAME_PLAYING:
       drawFieldBonuses();
       drawBall();

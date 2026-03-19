@@ -12,6 +12,7 @@
 #define BALL_SPEED_ACCEL      1.08f
 #define MAX_BALL_SPEED        60.0f
 #define INTRO_DURATION_MS 5000
+#define GAME_START_DELAY_MS 1500
 
 #define BONUS_DURATION_MS    10000UL
 #define BONUS_SPAWN_MIN_MS    5000UL
@@ -22,7 +23,7 @@
 #define SHRUNK_RACKET_SIZE   6
 
 enum TypeLimit {MIN, MAX};
-enum GameState { GAME_INTRO, GAME_PLAYING, GAME_OVER };
+enum GameState { GAME_INTRO, GAME_STARTING, GAME_PLAYING, GAME_OVER };
 enum BonusType { BONUS_SHRINK_ENEMY, BONUS_ENLARGE_SELF };
 
 struct BonusItem {
@@ -97,6 +98,7 @@ public:
   GameState state;
   Player *winner;
   unsigned long introStartMs;
+  unsigned long startingStartMs;
   BonusItem fieldBonuses[MAX_FIELD_BONUSES];
   Player *lastHitter;
   unsigned long nextBonusSpawnTime;
