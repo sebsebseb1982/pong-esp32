@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "wifi-connection.h"
 #include "ota.h"
 #include "controls.h"

@@ -22,6 +22,7 @@ public:
   int previousSpeedRefreshPositionX;
   unsigned long nextSpeedRefresh;
   float speedX;  // pixels / s
+  int previousSize;
   int size;
 };
 

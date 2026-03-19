@@ -24,7 +24,7 @@ private:
   AiEsp32RotaryEncoder *player2RotaryEncoder;
   static AiEsp32RotaryEncoder *player1RotaryEncoderPtr;
   static AiEsp32RotaryEncoder *player2RotaryEncoderPtr;
-  void setupRotaryEncoder(AiEsp32RotaryEncoder *rotaryEncoder, void (*ISR_callback)(void));
+  void setupRotaryEncoder(AiEsp32RotaryEncoder *rotaryEncoder, Racket *racket, void (*ISR_callback)(void));
   static void readPlayer1RotaryEncoderISR();
   static void readPlayer2RotaryEncoderISR();
 public:

@@ -21,6 +21,7 @@ void Controls::setup() {
   Controls::player1RotaryEncoderPtr = this->player1RotaryEncoder;
   setupRotaryEncoder(
     this->player1RotaryEncoder,
+    this->game->player1->racket,
     Controls::readPlayer1RotaryEncoderISR);
 
   // Player 2
@@ -35,6 +36,7 @@ void Controls::setup() {
   Controls::player2RotaryEncoderPtr = this->player2RotaryEncoder;
   setupRotaryEncoder(
     this->player2RotaryEncoder,
+    this->game->player2->racket,
     Controls::readPlayer2RotaryEncoderISR);
 }
 
@@ -50,13 +52,13 @@ void IRAM_ATTR Controls::readPlayer2RotaryEncoderISR() {
   }
 }
 
-void Controls::setupRotaryEncoder(AiEsp32RotaryEncoder* rotaryEncoder, void (*ISR_callback)(void)) {
+void Controls::setupRotaryEncoder(AiEsp32RotaryEncoder* rotaryEncoder, Racket* racket, void (*ISR_callback)(void)) {
   rotaryEncoder->begin();
   rotaryEncoder->setup(ISR_callback);
   bool circleValues = false;
   rotaryEncoder->setBoundaries(
     0,
-    GAME_WIDTH - INITIAL_RACKET_SIZE - 1,
+    GAME_WIDTH - racket->size - 1,
     circleValues);
   rotaryEncoder->setAcceleration(25);
 }
@@ -71,10 +73,19 @@ void Controls::loop() {
     Serial.println("P1 rotary encoder clicked !");
   }
 
+  this->game->player1->racket->previousSize = this->game->player1->racket->size;
   if (digitalRead(PLAYER_1_BUTTON_PIN) == HIGH) {
     this->game->player1->racket->size = INITIAL_RACKET_SIZE / 2;
+    setupRotaryEncoder(
+      this->player1RotaryEncoder,
+      this->game->player1->racket,
+      Controls::readPlayer1RotaryEncoderISR);
   } else {
     this->game->player1->racket->size = INITIAL_RACKET_SIZE;
+    setupRotaryEncoder(
+      this->player1RotaryEncoder,
+      this->game->player1->racket,
+      Controls::readPlayer1RotaryEncoderISR);
   }
 
   // Player 2
@@ -86,6 +97,7 @@ void Controls::loop() {
     Serial.println("P2 rotary encoder clicked !");
   }
 
+  this->game->player2->racket->previousSize = this->game->player2->racket->size;
   if (digitalRead(PLAYER_2_BUTTON_PIN) == HIGH) {
     this->game->player2->racket->size = INITIAL_RACKET_SIZE / 2;
   } else {

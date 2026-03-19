@@ -39,6 +39,7 @@ Racket::Racket(int positionY) {
   this->nextSpeedRefresh = millis() + RACKET_SPEED_REFRESH_RATE;
   this->speedX = 0.0;
   this->size = INITIAL_RACKET_SIZE;
+  this->previousSize = -1;
 }
 
 void Racket::loop() {

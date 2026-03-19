@@ -59,13 +59,13 @@ void UserInterface::drawRacket(Racket *racket) {
   uint16_t racketColor = Colors::white(this->ledPanel->dma_display);
   uint16_t backgroundColor = Colors::black(this->ledPanel->dma_display);
 
-  bool hasChangedPosition = racket->previousPositionX != racket->positionX;
+  bool needRedraw = racket->previousPositionX != racket->positionX || racket->previousSize != racket->size;
 
-  if (hasChangedPosition) {
+  if (needRedraw) {
     this->ledPanel->dma_display->drawLine(
       racket->previousPositionX,
       racket->positionY,
-      racket->previousPositionX + racket->size,
+      racket->previousPositionX + racket->previousSize,
       racket->positionY,
       backgroundColor);
     this->ledPanel->dma_display->drawLine(
