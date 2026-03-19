@@ -176,8 +176,8 @@ Ball::Ball(void) {
   this->positionY = 1.0;
   this->previousPositionX = this->positionX;
   this->previousPositionY = this->positionY;
-  this->speedX = 16.3;
-  this->speedY = 22.2;
+  this->speedX = INITIAL_BALL_SPEED_X;
+  this->speedY = INITIAL_BALL_SPEED_Y;
   this->previousLoopMillis = millis();
   this->hasTouchedWall = false;
   this->hasTouchedRacket = false;
@@ -197,12 +197,9 @@ void Ball::reboundXIfNeeded(float limitX, TypeLimit typeLimit) {
   }
 
   if (needToRebound) {
-    this->speedX = this->speedX * -0.9;
-    if (this->speedX > 0) {
-      this->speedX = max(this->speedX, (float)(MINIMUM_SPEED * 1.0));
-    } else {
-      this->speedX = min(this->speedX, (float)(MINIMUM_SPEED * -1.0));
-    }
+    this->speedX = this->speedX * -BALL_SPEED_ACCEL;
+    if (this->speedX > MAX_BALL_SPEED) this->speedX = MAX_BALL_SPEED;
+    if (this->speedX < -MAX_BALL_SPEED) this->speedX = -MAX_BALL_SPEED;
   }
 }
 
@@ -237,11 +234,15 @@ bool Ball::reboundYIfNeeded(Racket *racket, TypeLimit typeLimit) {
   }
 
   if (needToRebound) {
-    this->speedY = this->speedY * -0.9;
-    if (this->speedY > 0) {
-      this->speedY = max(this->speedY, (float)(MINIMUM_SPEED * 1.0));
+    if (missedBall) {
+      // Point terminé – réinitialiser la vitesse au départ lent
+      this->speedX = (this->speedX >= 0) ? INITIAL_BALL_SPEED_X : -INITIAL_BALL_SPEED_X;
+      this->speedY = (this->speedY < 0)  ? INITIAL_BALL_SPEED_Y : -INITIAL_BALL_SPEED_Y;
     } else {
-      this->speedY = min(this->speedY, (float)(MINIMUM_SPEED * -1.0));
+      // Touche de raquette – accélérer progressivement
+      this->speedY = this->speedY * -BALL_SPEED_ACCEL;
+      if (this->speedY > MAX_BALL_SPEED) this->speedY = MAX_BALL_SPEED;
+      if (this->speedY < -MAX_BALL_SPEED) this->speedY = -MAX_BALL_SPEED;
     }
   }
   return missedBall;
@@ -268,8 +269,8 @@ void Ball::reset() {
   this->positionY = 1.0;
   this->previousPositionX = -999.0;
   this->previousPositionY = -999.0;
-  this->speedX = 16.3;
-  this->speedY = 22.2;
+  this->speedX = INITIAL_BALL_SPEED_X;
+  this->speedY = INITIAL_BALL_SPEED_Y;
   this->previousLoopMillis = millis();
   this->hasTouchedWall = false;
   this->hasTouchedRacket = false;
