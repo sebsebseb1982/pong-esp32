@@ -8,10 +8,19 @@ Game::Game(void) {
   this->state = GAME_INTRO;
   this->winner = nullptr;
   this->introStartMs = 0;
+  this->lastHitter = nullptr;
+  this->nextBonusSpawnTime = 0;
+  for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
+    this->fieldBonuses[i].active = false;
+  }
+  this->racket1Effect.active = false;
+  this->racket2Effect.active = false;
 }
 
 void Game::setup() {
+  randomSeed(micros());
   this->introStartMs = millis();
+  this->nextBonusSpawnTime = millis() + random(BONUS_SPAWN_MIN_MS, BONUS_SPAWN_MAX_MS + 1);
 }
 
 void Game::loopCollisions() {
@@ -19,9 +28,89 @@ void Game::loopCollisions() {
   this->ball.reboundXIfNeeded(0.0, MIN);
   this->ball.reboundXIfNeeded((GAME_WIDTH - 1) * 1.0, MAX);
 
-  // Racket
-  this->player2->score += this->ball.reboundYIfNeeded(this->player1->racket, MIN) ? 1 : 0;
-  this->player1->score += this->ball.reboundYIfNeeded(this->player2->racket, MAX) ? 1 : 0;
+  // Rackets – track last hitter for bonus collection
+  this->ball.hasTouchedRacket = false;
+  bool p1miss = this->ball.reboundYIfNeeded(this->player1->racket, MIN);
+  if (this->ball.hasTouchedRacket) this->lastHitter = this->player1;
+  this->player2->score += p1miss ? 1 : 0;
+
+  this->ball.hasTouchedRacket = false;
+  bool p2miss = this->ball.reboundYIfNeeded(this->player2->racket, MAX);
+  if (this->ball.hasTouchedRacket) this->lastHitter = this->player2;
+  this->player1->score += p2miss ? 1 : 0;
+}
+
+void Game::loopBonusSpawning() {
+  if (millis() < this->nextBonusSpawnTime) return;
+
+  int freeSlot = -1;
+  for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
+    if (!this->fieldBonuses[i].active) { freeSlot = i; break; }
+  }
+  if (freeSlot != -1) {
+    this->fieldBonuses[freeSlot].positionX = random(GAME_WIDTH / 4, GAME_WIDTH * 3 / 4 + 1);
+    this->fieldBonuses[freeSlot].positionY = random(GAME_HEIGHT / 4, GAME_HEIGHT * 3 / 4 + 1);
+    this->fieldBonuses[freeSlot].type = (random(2) == 0) ? BONUS_SHRINK_ENEMY : BONUS_ENLARGE_SELF;
+    this->fieldBonuses[freeSlot].active = true;
+  }
+  this->nextBonusSpawnTime = millis() + random(BONUS_SPAWN_MIN_MS, BONUS_SPAWN_MAX_MS + 1);
+}
+
+void Game::loopBonusCollection() {
+  if (this->lastHitter == nullptr) return;
+
+  int ballX = (int)this->ball.positionX;
+  int ballY = (int)this->ball.positionY;
+  for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
+    if (!this->fieldBonuses[i].active) continue;
+    if ((int)this->fieldBonuses[i].positionX == ballX &&
+        (int)this->fieldBonuses[i].positionY == ballY) {
+      if (this->lastHitter->inventoryCount < MAX_INVENTORY) {
+        this->lastHitter->inventory[this->lastHitter->inventoryCount] = this->fieldBonuses[i].type;
+        this->lastHitter->inventoryCount++;
+      }
+      this->fieldBonuses[i].active = false;
+    }
+  }
+}
+
+void Game::loopBonusEffects() {
+  unsigned long now = millis();
+  if (this->racket1Effect.active && now >= this->racket1Effect.expiresAt) {
+    this->player1->racket->size = INITIAL_RACKET_SIZE;
+    this->racket1Effect.active = false;
+  }
+  if (this->racket2Effect.active && now >= this->racket2Effect.expiresAt) {
+    this->player2->racket->size = INITIAL_RACKET_SIZE;
+    this->racket2Effect.active = false;
+  }
+}
+
+void Game::activateBonus(Player *player) {
+  if (player->inventoryCount <= 0) return;
+  if (this->state != GAME_PLAYING) return;
+
+  BonusType bonusType = player->inventory[player->inventoryCount - 1];
+  player->inventoryCount--;
+
+  RacketEffect *effect;
+  Racket *targetRacket;
+  int newSize;
+
+  if (bonusType == BONUS_SHRINK_ENEMY) {
+    targetRacket = (player == this->player1) ? this->player2->racket : this->player1->racket;
+    effect       = (player == this->player1) ? &this->racket2Effect  : &this->racket1Effect;
+    newSize = SHRUNK_RACKET_SIZE;
+  } else {
+    targetRacket = player->racket;
+    effect       = (player == this->player1) ? &this->racket1Effect  : &this->racket2Effect;
+    newSize = ENLARGED_RACKET_SIZE;
+  }
+
+  targetRacket->size = newSize;
+  effect->type      = bonusType;
+  effect->expiresAt = millis() + BONUS_DURATION_MS;
+  effect->active    = true;
 }
 
 void Game::loopScore() {
@@ -51,6 +140,9 @@ void Game::loop() {
   this->player2->racket->loop();
   this->ball.loop();
   this->loopCollisions();
+  this->loopBonusSpawning();
+  this->loopBonusCollection();
+  this->loopBonusEffects();
   this->loopScore();
 }
 
@@ -76,6 +168,7 @@ void Racket::loop() {
 Player::Player(Racket *racket) {
   this->score = 0;
   this->racket = racket;
+  this->inventoryCount = 0;
 }
 
 Ball::Ball(void) {
@@ -188,10 +281,22 @@ void Game::reset() {
   this->player2->score = 0;
   this->player1->racket->positionX = 0;
   this->player1->racket->previousPositionX = -1;
+  this->player1->racket->size = INITIAL_RACKET_SIZE;
   this->player2->racket->positionX = 0;
   this->player2->racket->previousPositionX = -1;
+  this->player2->racket->size = INITIAL_RACKET_SIZE;
   this->winner = nullptr;
   this->ball.reset();
   this->state = GAME_INTRO;
   this->introStartMs = millis();
+  // Bonus state
+  this->lastHitter = nullptr;
+  for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
+    this->fieldBonuses[i].active = false;
+  }
+  this->player1->inventoryCount = 0;
+  this->player2->inventoryCount = 0;
+  this->racket1Effect.active = false;
+  this->racket2Effect.active = false;
+  this->nextBonusSpawnTime = millis() + random(BONUS_SPAWN_MIN_MS, BONUS_SPAWN_MAX_MS + 1);
 }

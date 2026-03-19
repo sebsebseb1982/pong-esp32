@@ -6,6 +6,11 @@ UserInterface::UserInterface(Game *game, LEDPanel *ledPanel) {
   this->game = game;
   this->ledPanel = ledPanel;
   this->previousState = GAME_INTRO;
+  for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
+    this->prevBonusPixelX[i] = -1;
+    this->prevBonusPixelY[i] = -1;
+    this->prevBonusActive[i] = false;
+  }
 }
 
 void UserInterface::setup() {
@@ -25,11 +30,22 @@ void UserInterface::loop() {
         // Clear game area, rebuild static UI, force racket & ball redraw
         this->ledPanel->dma_display->fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT,
           Colors::black(this->ledPanel->dma_display));
+        // Clear bonus inventory column
+        this->ledPanel->dma_display->drawLine(59, 0, 59, SCREEN_HEIGHT - 1,
+          Colors::black(this->ledPanel->dma_display));
         drawInterface();
         this->game->player1->racket->previousPositionX = -1;
         this->game->player2->racket->previousPositionX = -1;
+        for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
+          this->prevBonusPixelX[i] = -1;
+          this->prevBonusPixelY[i] = -1;
+          this->prevBonusActive[i] = false;
+        }
         break;
       case GAME_OVER:
+        // Clear inventory column before drawing game-over screen
+        this->ledPanel->dma_display->drawLine(59, 0, 59, SCREEN_HEIGHT - 1,
+          Colors::black(this->ledPanel->dma_display));
         drawGameOver();
         break;
     }
@@ -43,9 +59,11 @@ void UserInterface::loop() {
       drawRacket(this->game->player2->racket);
       break;
     case GAME_PLAYING:
+      drawFieldBonuses();
       drawBall();
       drawRacket(this->game->player1->racket);
       drawRacket(this->game->player2->racket);
+      drawBonusInventory();
       drawScores();
       break;
     case GAME_OVER:
@@ -140,7 +158,19 @@ void UserInterface::drawScores() {
 }
 
 void UserInterface::drawRacket(Racket *racket) {
-  uint16_t racketColor = Colors::white(this->ledPanel->dma_display);
+  // Determine color based on active bonus effect on this racket
+  uint16_t racketColor;
+  if (racket == this->game->player1->racket && this->game->racket1Effect.active) {
+    racketColor = (this->game->racket1Effect.type == BONUS_SHRINK_ENEMY)
+      ? Colors::red(this->ledPanel->dma_display)
+      : Colors::green(this->ledPanel->dma_display);
+  } else if (racket == this->game->player2->racket && this->game->racket2Effect.active) {
+    racketColor = (this->game->racket2Effect.type == BONUS_SHRINK_ENEMY)
+      ? Colors::red(this->ledPanel->dma_display)
+      : Colors::green(this->ledPanel->dma_display);
+  } else {
+    racketColor = Colors::white(this->ledPanel->dma_display);
+  }
   uint16_t backgroundColor = Colors::black(this->ledPanel->dma_display);
 
   bool needRedraw = racket->previousPositionX != racket->positionX || racket->previousSize != racket->size;
@@ -158,6 +188,60 @@ void UserInterface::drawRacket(Racket *racket) {
       racket->positionX + racket->size,
       racket->positionY,
       racketColor);
+  }
+}
+
+void UserInterface::drawFieldBonuses() {
+  for (int i = 0; i < MAX_FIELD_BONUSES; i++) {
+    BonusItem &b = this->game->fieldBonuses[i];
+    int curX = b.active ? (int)b.positionX : -1;
+    int curY = b.active ? (int)b.positionY : -1;
+
+    bool changed = (b.active != this->prevBonusActive[i]) ||
+                   (curX    != this->prevBonusPixelX[i])  ||
+                   (curY    != this->prevBonusPixelY[i]);
+    if (!changed) continue;
+
+    // Erase previous pixel
+    if (this->prevBonusActive[i]) {
+      this->ledPanel->dma_display->drawPixel(
+        this->prevBonusPixelX[i],
+        this->prevBonusPixelY[i],
+        Colors::black(this->ledPanel->dma_display));
+    }
+    // Draw new pixel
+    if (b.active) {
+      uint16_t bonusColor = (b.type == BONUS_SHRINK_ENEMY)
+        ? Colors::red(this->ledPanel->dma_display)
+        : Colors::green(this->ledPanel->dma_display);
+      this->ledPanel->dma_display->drawPixel(curX, curY, bonusColor);
+    }
+    this->prevBonusActive[i] = b.active;
+    this->prevBonusPixelX[i] = curX;
+    this->prevBonusPixelY[i] = curY;
+  }
+}
+
+void UserInterface::drawBonusInventory() {
+  // P1 inventory bar at x=59, y=1..7 (fills downward from top)
+  for (int i = 0; i < MAX_INVENTORY; i++) {
+    uint16_t color = Colors::black(this->ledPanel->dma_display);
+    if (i < this->game->player1->inventoryCount) {
+      color = (this->game->player1->inventory[i] == BONUS_SHRINK_ENEMY)
+        ? Colors::red(this->ledPanel->dma_display)
+        : Colors::green(this->ledPanel->dma_display);
+    }
+    this->ledPanel->dma_display->drawPixel(59, 1 + i, color);
+  }
+  // P2 inventory bar at x=59, y=56..62 (fills upward from bottom)
+  for (int i = 0; i < MAX_INVENTORY; i++) {
+    uint16_t color = Colors::black(this->ledPanel->dma_display);
+    if (i < this->game->player2->inventoryCount) {
+      color = (this->game->player2->inventory[i] == BONUS_SHRINK_ENEMY)
+        ? Colors::red(this->ledPanel->dma_display)
+        : Colors::green(this->ledPanel->dma_display);
+    }
+    this->ledPanel->dma_display->drawPixel(59, 62 - i, color);
   }
 }
 

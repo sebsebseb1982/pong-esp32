@@ -10,8 +10,30 @@
 #define MINIMUM_SPEED 16
 #define INTRO_DURATION_MS 5000
 
+#define BONUS_DURATION_MS    10000UL
+#define BONUS_SPAWN_MIN_MS    5000UL
+#define BONUS_SPAWN_MAX_MS   15000UL
+#define MAX_FIELD_BONUSES    3
+#define MAX_INVENTORY        7
+#define ENLARGED_RACKET_SIZE 19
+#define SHRUNK_RACKET_SIZE   6
+
 enum TypeLimit {MIN, MAX};
 enum GameState { GAME_INTRO, GAME_PLAYING, GAME_OVER };
+enum BonusType { BONUS_SHRINK_ENEMY, BONUS_ENLARGE_SELF };
+
+struct BonusItem {
+  float positionX;
+  float positionY;
+  BonusType type;
+  bool active;
+};
+
+struct RacketEffect {
+  BonusType type;
+  unsigned long expiresAt;
+  bool active;
+};
 
 class Racket {
 public:
@@ -33,6 +55,8 @@ public:
   int score;
   Player(Racket *racket);
   Racket *racket;
+  BonusType inventory[MAX_INVENTORY];
+  int inventoryCount;
 };
 
 class Ball {
@@ -60,6 +84,9 @@ class Game {
 private:
   void loopCollisions();
   void loopScore();
+  void loopBonusSpawning();
+  void loopBonusCollection();
+  void loopBonusEffects();
 public:
   Ball ball;
   Player *player1;
@@ -67,10 +94,16 @@ public:
   GameState state;
   Player *winner;
   unsigned long introStartMs;
+  BonusItem fieldBonuses[MAX_FIELD_BONUSES];
+  Player *lastHitter;
+  unsigned long nextBonusSpawnTime;
+  RacketEffect racket1Effect;
+  RacketEffect racket2Effect;
   Game(void);
   void setup();
   void loop();
   void reset();
+  void activateBonus(Player *player);
 };
 
 #endif

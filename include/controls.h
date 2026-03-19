@@ -27,6 +27,10 @@ private:
   void setupRotaryEncoder(AiEsp32RotaryEncoder *rotaryEncoder, Racket *racket, void (*ISR_callback)(void));
   static void readPlayer1RotaryEncoderISR();
   static void readPlayer2RotaryEncoderISR();
+  bool previousButton1;
+  bool previousButton2;
+  int lastBoundarySize1;
+  int lastBoundarySize2;
 public:
   Controls(Game *game);
   void setup();

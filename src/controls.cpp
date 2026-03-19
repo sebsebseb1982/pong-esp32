@@ -5,6 +5,10 @@ AiEsp32RotaryEncoder* Controls::player2RotaryEncoderPtr = nullptr;
 
 Controls::Controls(Game* game) {
   this->game = game;
+  this->previousButton1 = false;
+  this->previousButton2 = false;
+  this->lastBoundarySize1 = INITIAL_RACKET_SIZE;
+  this->lastBoundarySize2 = INITIAL_RACKET_SIZE;
 }
 
 void Controls::setup() {
@@ -86,15 +90,21 @@ void Controls::loop() {
     Serial.println("P1 rotary encoder clicked !");
   }
 
+  // P1 action button: rising edge activates a bonus
+  bool btn1Now = (digitalRead(PLAYER_1_BUTTON_PIN) == HIGH);
+  if (btn1Now && !this->previousButton1) {
+    this->game->activateBonus(this->game->player1);
+  }
+  this->previousButton1 = btn1Now;
+
+  // Capture current size for UI dirty-flag, then sync encoder boundary if size changed
   this->game->player1->racket->previousSize = this->game->player1->racket->size;
-  this->game->player1->racket->size = (digitalRead(PLAYER_1_BUTTON_PIN) == HIGH)
-    ? INITIAL_RACKET_SIZE / 2
-    : INITIAL_RACKET_SIZE;
-  if (this->game->player1->racket->size != this->game->player1->racket->previousSize) {
+  if (this->game->player1->racket->size != this->lastBoundarySize1) {
     this->player1RotaryEncoder->setBoundaries(
       0,
       GAME_WIDTH - this->game->player1->racket->size - 1,
       false);
+    this->lastBoundarySize1 = this->game->player1->racket->size;
   }
 
   // Player 2
@@ -106,14 +116,20 @@ void Controls::loop() {
     Serial.println("P2 rotary encoder clicked !");
   }
 
+  // P2 action button: rising edge activates a bonus
+  bool btn2Now = (digitalRead(PLAYER_2_BUTTON_PIN) == HIGH);
+  if (btn2Now && !this->previousButton2) {
+    this->game->activateBonus(this->game->player2);
+  }
+  this->previousButton2 = btn2Now;
+
+  // Capture current size for UI dirty-flag, then sync encoder boundary if size changed
   this->game->player2->racket->previousSize = this->game->player2->racket->size;
-  this->game->player2->racket->size = (digitalRead(PLAYER_2_BUTTON_PIN) == HIGH)
-    ? INITIAL_RACKET_SIZE / 2
-    : INITIAL_RACKET_SIZE;
-  if (this->game->player2->racket->size != this->game->player2->racket->previousSize) {
+  if (this->game->player2->racket->size != this->lastBoundarySize2) {
     this->player2RotaryEncoder->setBoundaries(
       0,
       GAME_WIDTH - this->game->player2->racket->size - 1,
       false);
+    this->lastBoundarySize2 = this->game->player2->racket->size;
   }
 }
